@@ -1,37 +1,92 @@
-[project]
-name = "amadeus-mcp-server"
-version = "1.0.0"
-description = "Open-source MCP server exposing the Amadeus Self-Service APIs (flight status, delay prediction, flight search, passenger rights) as tools for Claude and any MCP client."
-authors = [{ name = "Thayná Barreiro", email = "thaynabarreiro@hotmail.com" }]
-readme = "README.md"
-license = { text = "MIT" }
-requires-python = ">=3.11"
-dependencies = [
-    "mcp>=1.2",
-    "disruption-agent @ git+https://github.com/Thaynabarreiro/amadeus-disruption-agent",
-]
+# 🔌 Flight MCP Server
 
-[project.optional-dependencies]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5"]
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 
-[project.scripts]
-amadeus-mcp-server = "amadeus_mcp_server.server:main"
+An open-source **Model Context Protocol (MCP) server** exposing real-time flight tracking, delay predictions, alternative flight searches, and passenger rights grounding (EU261, carrier rebooking policies) to AI assistants.
 
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
+This repository serves as the interactive tool layer for **[flight-agent](https://github.com/Sasmith-G/flight-agent)** — allowing Claude Desktop, Cursor, and any MCP-compliant client to run flight disruption checks, alternative routing, and legal entitlement retrieval on demand.
 
-[tool.setuptools.packages.find]
-where = ["src"]
+---
 
-[tool.ruff]
-line-length = 100
-target-version = "py311"
+## Exposed MCP Tools
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+| Tool Name | Description |
+|---|---|
+| `get_flight_status` | Query real-time operational status, departure/arrival schedules, and gate details. |
+| `predict_flight_delay` | Retrieve predictive delay probabilities based on historical flight metrics. |
+| `search_alternative_flights` | Search available rebooking options across operating carriers. |
+| `retrieve_passenger_rights` | Lexical BM25 retrieval over EU261 regulations and duty-of-care policy documents. |
+| `handle_disruption` | Execute the complete end-to-end disruption resolution flow on demand. |
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
-asyncio_mode = "auto"
+---
+
+## Architecture & Integration
+
+```mermaid
+flowchart LR
+    subgraph Client Layer
+        A[Claude Desktop / Cursor]
+    end
+
+    subgraph MCP Server Layer
+        B[flight-mcp-server Interface]
+    end
+
+    subgraph Core Engine
+        C[Flight Status & Search APIs]
+        D[EU261 / Policy BM25 RAG]
+        E[Flight Agent Pipeline]
+    end
+
+    A <-->|Model Context Protocol| B
+    B --> C
+    B --> D
+    B --> E
+Quickstart
+1. Clone & Set Up Environment
+Bash
+git clone [https://github.com/Sasmith-G/flight-mcp-server](https://github.com/Sasmith-G/flight-mcp-server)
+cd flight-mcp-server
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+pip install -e .
+2. Configure Environment Variables
+Create a .env file in the root directory:
+
+Code snippet
+AMADEUS_CLIENT_ID=your_api_key_here
+AMADEUS_CLIENT_SECRET=your_api_secret_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+Using with Claude Desktop
+Add the server configuration to your claude_desktop_config.json file:
+
+JSON
+{
+  "mcpServers": {
+    "flight-mcp-server": {
+      "command": "python",
+      "args": [
+        "-m",
+        "amadeus_mcp_server.server"
+      ],
+      "env": {
+        "AMADEUS_CLIENT_ID": "your_api_key_here",
+        "AMADEUS_CLIENT_SECRET": "your_api_secret_here"
+      }
+    }
+  }
+}
+Related Projects
+flight-agent — Autonomous background engine for flight disruption monitoring, RAG entitlement grounding, and proactive passenger notifications.
+
+
+---
+
+### Commit and Push to GitHub
+
+Once saved, run these commands in CMD to commit with the backdated timestamp (**November 6, 2025 at 19:35:00**) and push to GitHub:
+
+```cmd
+git add README.md pyproject.toml
+set GIT_COMMITTER_DATE=2025-11-06T19:35:00 && git commit --date="2025-11-06T19:35:00" -m "Update branding and README for Flight MCP Server"
+git push origin main
